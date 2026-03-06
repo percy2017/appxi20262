@@ -10,12 +10,6 @@ import * as pasajeroModel from '../src/models/pasajeroModel.js';
 const router = express.Router();
 
 /**
- * GET /admin/evolution
- * Renderiza la página de Evolution API
- */
-router.get('/admin/evolution', evolutionController.evolutionPage);
-
-/**
  * GET /api/evolution/instances
  * API: Obtener instancias disponibles de Evolution API
  */
