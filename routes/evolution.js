@@ -4,10 +4,15 @@
  */
 
 import express from 'express';
+import jwt from 'jsonwebtoken';
 import * as evolutionController from '../src/controllers/evolutionController.js';
 import * as pasajeroModel from '../src/models/pasajeroModel.js';
 
 const router = express.Router();
+
+// Configuración del token JWT
+const JWT_SECRET = process.env.JWT_SECRET || 'mototaxi_secret_key_2026';
+const TOKEN_EXPIRY = '7d'; // 7 días
 
 /**
  * GET /api/evolution/instances
@@ -171,10 +176,27 @@ export async function verificarPinLogin(req, res) {
             avatar: whatsappPicture
         });
         
+        // Generar token JWT después de verificar el PIN correctamente
+        const token = jwt.sign(
+            {
+                pasajero_id: pasajero.id,
+                telefono: pasajero.telefono,
+                rol: 'pasajero'
+            },
+            JWT_SECRET,
+            { expiresIn: TOKEN_EXPIRY }
+        );
+
         res.json({
             success: true,
             message: 'Pasajero autenticado correctamente',
-            data: pasajero
+            data: {
+                id: pasajero.id,
+                nombre: pasajero.nombre,
+                telefono: pasajero.telefono,
+                avatar: pasajero.avatar
+            },
+            token: token
         });
     } catch (error) {
         console.error('Error al verificar PIN:', error);

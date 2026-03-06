@@ -59,6 +59,7 @@ Sistema de transporte tipo Mototaxi con panel de administración, aplicaciones p
 | Backend | Node.js + Express (ES6 Modules) |
 | Base de Datos | SQLite (`better-sqlite3`) |
 | Sesiones | express-session |
+| Autenticación JWT | jsonwebtoken |
 | Motor de Plantillas | EJS |
 | Frontend Admin | Bootstrap 5.0 + DataTables |
 | Frontend Pasajero/Chofer | OnsenUI + React |
@@ -238,11 +239,40 @@ La moneda se muestra automáticamente en la UI del admin.
 
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
+| POST | `/api/auth/solicitar-pin` | Solicitar PIN de verificación por WhatsApp |
+| POST | `/api/auth/verificar-pin` | Verificar PIN y obtener token JWT |
 | POST | `/api/auth/login-whatsapp` | Login/registro de pasajero |
 | POST | `/api/viajes/solicitar` | Solicitar viaje |
 | GET | `/api/viajes/:id` | Obtener estado de viaje |
 | GET | `/api/pasajero/:id/viajes` | Historial de viajes |
 | POST | `/api/resenas` | Crear reseña |
+
+### Autenticación JWT (WebApp Pasajero)
+
+El sistema de autenticación del WebApp Pasajero utiliza tokens JWT para mantener la sesión activa:
+
+1. **Solicitar PIN:** `POST /api/auth/solicitar-pin` con `{ "phone": "71146267" }`
+2. **Verificar PIN:** `POST /api/auth/verificar-pin` con `{ "phone": "71146267", "pin": "123456" }`
+3. **Respuesta exitosa:** Retorna datos del pasajero + token JWT
+
+```json
+{
+  "success": true,
+  "message": "Pasajero autenticado correctamente",
+  "data": {
+    "id": 3,
+    "nombre": "Percy Alvarez",
+    "telefono": "71146267",
+    "avatar": "/images/pasajeros/..."
+  },
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+El token tiene una duración de **7 días** y debe almacenarse en el cliente:
+```javascript
+localStorage.setItem('pasajero_token', token);
+```
 
 ---
 

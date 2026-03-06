@@ -659,3 +659,50 @@ plantillas_notificaciones (
 5. Backend crea viaje en estado "buscando"
 6. Notifica a choferes por Socket.io y WhatsApp
 7. Si no hay choferes, notifica al pasajero
+
+---
+
+## Sistema de Autenticación JWT (WebApp Pasajero)
+
+### Descripción
+El WebApp del Pasajero utiliza tokens JWT para mantener al usuario autenticado sin pedir login a cada momento.
+
+### Configuración
+- **Dependencia:** `jsonwebtoken`
+- **Secret:** `JWT_SECRET` (configurable en `.env`, por defecto: `mototaxi_secret_key_2026`)
+- **Expiración:** `TOKEN_EXPIRY` (7 días)
+
+### Endpoint que Retorna Token
+
+**`POST /api/auth/verificar-pin`**
+
+Después de verificar el PIN correctamente, el endpoint retorna un token JWT:
+
+```json
+{
+  "success": true,
+  "message": "Pasajero autenticado correctamente",
+  "data": {
+    "id": 3,
+    "nombre": "Percy Alvarez",
+    "telefono": "71146267",
+    "avatar": "/images/pasajeros/..."
+  },
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+### Uso en Frontend
+El frontend debe guardar el token en `localStorage`:
+```javascript
+localStorage.setItem('pasajero_token', response.token);
+```
+
+### Payload del Token
+```javascript
+{
+  pasajero_id: Number,
+  telefono: String,
+  rol: 'pasajero'
+}
+```
