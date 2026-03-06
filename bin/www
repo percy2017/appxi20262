@@ -96,4 +96,11 @@ function onListening() {
     ? 'pipe ' + addr
     : 'port ' + addr.port;
   logger('Listening on ' + bind);
+  
+  // Mostrar URL de acceso
+  console.log('========================================');
+  console.log('🚀 Servidor corriendo en:');
+  console.log(`   http://localhost:${addr.port}`);
+  console.log(`   http://0.0.0.0:${addr.port}`);
+  console.log('========================================');
 }
