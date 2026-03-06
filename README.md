@@ -26,11 +26,16 @@ Sistema de transporte tipo Mototaxi con panel de administración, aplicaciones p
 - Página pública de inicio del servicio
 
 ### Dashboard Admin (`/admin`)
+- **Login/Logout** - Sistema de autenticación protegido
 - Gestión de usuarios del sistema
 - Gestión de pilotos/choferes
 - Gestión de pasajeros
 - Gestión de viajes con actualización en tiempo real
 - **Monitor Socket.io** - Visualiza conexiones, canales y eventos en tiempo real
+
+### Credenciales de Admin
+- **Usuario:** `admin`
+- **Contraseña:** `admin123`
 
 ### WebApp Pasajero
 - Registro/login via WhatsApp
@@ -53,6 +58,7 @@ Sistema de transporte tipo Mototaxi con panel de administración, aplicaciones p
 |-----------|------------|
 | Backend | Node.js + Express (ES6 Modules) |
 | Base de Datos | SQLite (`better-sqlite3`) |
+| Sesiones | express-session |
 | Motor de Plantillas | EJS |
 | Frontend Admin | Bootstrap 5.0 + DataTables |
 | Frontend Pasajero/Chofer | OnsenUI + React |
@@ -147,11 +153,27 @@ El servidor se ejecutará en: **http://localhost:3000**
 
 ---
 
+## 💰 Moneda Configurable
+
+La moneda de la aplicación se configura en el archivo `.env`:
+
+```env
+MONEDA=Bs                # Símbolo de moneda
+PRECIO_BASE=5           # Precio base del viaje
+PRECIO_KM=3             # Precio por kilómetro
+```
+
+La moneda se muestra automáticamente en la UI del admin.
+
+---
+
 ## 🛣️ Rutas del Proyecto
 
 | Ruta | Descripción |
 |------|-------------|
 | `/` | Landing Page |
+| `/admin/login` | Login de Admin |
+| `/admin/logout` | Cerrar sesión |
 | `/admin` | Dashboard Admin |
 | `/admin/usuarios` | Gestión de Usuarios |
 | `/admin/pilotos` | Gestión de Pilotos |
@@ -277,7 +299,7 @@ MIT License - voir le fichier [LICENSE](LICENSE) pour plus de détails.
 
 ## 👤 Autor
 
-Desarrollado por [Tu Nombre]
+Desarrollado por **Percy Alvarez**
 
 ---
 
