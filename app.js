@@ -9,6 +9,7 @@ import logger from 'morgan';
 import indexRouter from './routes/index.js';
 import adminRouter from './routes/admin.js';
 import evolutionRouter from './routes/evolution.js';
+import apiRouter from './routes/api.js';
 // import usersRouter from './routes/users.js';
 
 // Importar e inicializar la base de datos
@@ -89,6 +90,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', indexRouter);
 app.use('/admin', adminRouter);
 app.use('/', evolutionRouter);
+app.use('/', apiRouter);  // Rutas públicas de API para WebApps
 // app.use('/users', usersRouter);
 
 // catch 404 and forward to error handler
