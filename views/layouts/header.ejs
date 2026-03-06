@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="<%= typeof description !== 'undefined' ? description : 'Sistema de Gestión de Mototaxi - Transporte rápido y seguro' %>">
+    <title><%= typeof title !== 'undefined' ? title : 'MotoTaxi - Transporte Rápido y Seguro' %></title>
+    
+    <!-- Bootstrap 5.0 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/offcanvas.css">
+    
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        .navbar {
+            padding: 1rem 0;
+            background: rgba(26, 26, 46, 0.95) !important;
+            backdrop-filter: blur(10px);
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: #ffc107 !important;
+        }
+        
+        .navbar-brand i {
+            color: #ffc107;
+        }
+        
+        .nav-link {
+            font-weight: 500;
+            padding: 0.5rem 1rem !important;
+            transition: color 0.3s;
+        }
+        
+        .nav-link:hover {
+            color: #ffc107 !important;
+        }
+        
+        .btn-primary {
+            background-color: #ffc107;
+            border-color: #ffc107;
+            color: #1a1a2e;
+            font-weight: 600;
+        }
+        
+        .btn-primary:hover {
+            background-color: #e5b000;
+            border-color: #e5b000;
+            color: #1a1a2e;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top" aria-label="Main navigation">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-bicycle me-2"></i>Appxi
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#como-funciona">Cómo Funciona</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#servicios">Servicios</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#contacto">Contacto</a>
+                    </li>
+                    <li class="nav-item ms-lg-3">
+                        <a class="btn btn-primary btn-sm px-4" href="/pasajero">
+                            <i class="bi bi-person-fill me-1"></i>Pasajero
+                        </a>
+                    </li>
+                    <li class="nav-item ms-2">
+                        <a class="btn btn-outline-light btn-sm px-4" href="/chofer">
+                            <i class="bi bi-bicycle me-1"></i>Piloto
+                        </a>
+                    </li>
+                    <li class="nav-item ms-2">
+                        <a class="btn btn-outline-warning btn-sm px-4" href="/admin">
+                            <i class="bi bi-speedometer2 me-1"></i>Admin
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Spacer for fixed navbar -->
+    <div style="height: 80px;"></div>

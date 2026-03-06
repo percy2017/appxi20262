@@ -1,0 +1,306 @@
+<!-- Vista Socket Monitor - Monitoreo en tiempo real de Socket.io -->
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="bi bi-diagram-3"></i> Monitor Socket.io</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="recargarStats()">
+                <i class="bi bi-arrow-clockwise"></i> Actualizar
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-danger" onclick="limpiarLogs()">
+                <i class="bi bi-trash"></i> Limpiar
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Estado de Conexión -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-people"></i> Conexiones Activas</h5>
+                <h2 class="mb-0" id="activeConnections">0</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-person-plus"></i> Total Conexiones</h5>
+                <h2 class="mb-0" id="totalConnections">0</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-door-open"></i> Desconexiones</h5>
+                <h2 class="mb-0" id="totalDisconnections">0</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-info">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-collection"></i> Canales/Salas</h5>
+                <h2 class="mb-0" id="totalRooms">0</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Canales y Clientes -->
+<div class="row mb-4">
+    <!-- Lista de Canales -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-dark text-white">
+                <i class="bi bi-collection"></i> Canales/Salas Activos
+            </div>
+            <div class="card-body">
+                <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                    <table class="table table-sm table-hover" id="roomsTable">
+                        <thead>
+                            <tr>
+                                <th>Canal</th>
+                                <th>Clientes</th>
+                                <th>Eventos</th>
+                            </tr>
+                        </thead>
+                        <tbody id="roomsTableBody">
+                            <!-- Datos cargados dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Clientes Conectados -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-dark text-white">
+                <i class="bi bi-people"></i> Clientes Conectados
+            </div>
+            <div class="card-body">
+                <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                    <table class="table table-sm table-hover" id="clientsTable">
+                        <thead>
+                            <tr>
+                                <th>Socket ID</th>
+                                <th>Salas</th>
+                                <th>Conectado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="clientsTableBody">
+                            <!-- Datos cargados dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Log de Eventos -->
+<div class="card">
+    <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-journal-text"></i> Log de Eventos en Tiempo Real</span>
+        <span class="badge bg-light text-dark" id="eventCount">0 eventos</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+            <table class="table table-sm table-striped" id="eventsTable">
+                <thead class="sticky-top bg-light">
+                    <tr>
+                        <th style="width: 180px;">Hora</th>
+                        <th style="width: 100px;">Tipo</th>
+                        <th style="width: 150px;">Canal</th>
+                        <th style="width: 180px;">Evento</th>
+                        <th>Datos</th>
+                    </tr>
+                </thead>
+                <tbody id="eventsTableBody">
+                    <!-- Eventos cargados dinámicamente -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Almacena los datos de sockets
+    let socketData = {
+        activeConnections: 0,
+        totalConnections: 0,
+        totalDisconnections: 0,
+        rooms: [],
+        recentEvents: []
+    };
+
+    // Función para cargar estadísticas
+    function cargarStats() {
+        $.ajax({
+            url: '/admin/api/socket-stats',
+            method: 'GET',
+            success: function(response) {
+                if (response.success) {
+                    socketData = response.data;
+                    actualizarUI();
+                }
+            },
+            error: function() {
+                console.error('Error al cargar estadísticas');
+            }
+        });
+    }
+
+    // Actualiza la UI con los datos
+    function actualizarUI() {
+        // Actualizar contadores
+        $('#activeConnections').text(socketData.activeConnections);
+        $('#totalConnections').text(socketData.totalConnections);
+        $('#totalDisconnections').text(socketData.totalDisconnections);
+        $('#totalRooms').text(socketData.rooms.length);
+        
+        // Actualizar tabla de canales
+        let roomsHtml = '';
+        socketData.rooms.forEach(function(room) {
+            const clientCountBadge = room.clientCount > 0 
+                ? '<span class="badge bg-success">' + room.clientCount + '</span>'
+                : '<span class="badge bg-secondary">' + room.clientCount + '</span>';
+            
+            roomsHtml += '<tr>';
+            roomsHtml += '<td><code>' + room.name + '</code></td>';
+            roomsHtml += '<td>' + clientCountBadge + '</td>';
+            roomsHtml += '<td><span class="badge bg-info">' + room.eventCount + '</span></td>';
+            roomsHtml += '</tr>';
+        });
+        $('#roomsTableBody').html(roomsHtml || '<tr><td colspan="3" class="text-muted text-center">No hay canales activos</td></tr>');
+        
+        // Actualizar tabla de clientes
+        // Los clientes se obtienen del socket.io directamente
+        // Por ahora mostraremos los datos de rooms
+        let clientsHtml = '';
+        if (window.socketClients) {
+            window.socketClients.forEach(function(client) {
+                clientsHtml += '<tr>';
+                clientsHtml += '<td><code class="text-primary">' + client.id.substring(0, 12) + '...</code></td>';
+                clientsHtml += '<td><small>' + (client.rooms ? client.rooms.join(', ') : '-') + '</small></td>';
+                clientsHtml += '<td><small>' + new Date(client.connectedAt).toLocaleTimeString() + '</small></td>';
+                clientsHtml += '</tr>';
+            });
+        }
+        $('#clientsTableBody').html(clientsHtml || '<tr><td colspan="3" class="text-muted text-center">Cargando clientes...</td></tr>');
+        
+        // Actualizar contador de eventos
+        $('#eventCount').text(socketData.recentEvents.length + ' eventos');
+    }
+
+    // Recargar estadísticas manualmente
+    function recargarStats() {
+        cargarStats();
+        Swal.fire({
+            icon: 'success',
+            title: 'Actualizado',
+            text: 'Estadísticas de sockets actualizadas',
+            timer: 1000,
+            showConfirmButton: false
+        });
+    }
+
+    // Limpiar logs (solo limpia la UI, no el servidor)
+    function limpiarLogs() {
+        $('#eventsTableBody').html('');
+        $('#eventCount').text('0 eventos');
+    }
+
+    // Inicializar al cargar la página
+    $(document).ready(function() {
+        cargarStats();
+        
+        // Auto-actualizar cada 3 segundos
+        setInterval(cargarStats, 3000);
+        
+        // Escuchar eventos de socket en tiempo real
+        if (typeof socket !== 'undefined') {
+            socket.on('socket_event', function(event) {
+                // Agregar nuevo evento al log
+                agregarEventoLog(event);
+            });
+        }
+    });
+
+    // Agregar evento al log visual
+    function agregarEventoLog(event) {
+        const fecha = new Date(event.timestamp);
+        const hora = fecha.toLocaleTimeString();
+        
+        // Determinar clase según tipo
+        let tipoClass = 'secondary';
+        let tipoIcon = '';
+        switch(event.type) {
+            case 'connection': tipoClass = 'success'; tipoIcon = '🔌'; break;
+            case 'disconnection': tipoClass = 'danger'; tipoIcon = '❌'; break;
+            case 'join': tipoClass = 'info'; tipoIcon = '➡️'; break;
+            case 'leave': tipoClass = 'warning'; tipoIcon = '⬅️'; break;
+            case 'event_in': tipoClass = 'primary'; tipoIcon = '📥'; break;
+            case 'event_out': tipoClass = 'purple'; tipoIcon = '📤'; break;
+        }
+        
+        // Formatear datos
+        let datosHtml = '<small class="text-muted">-</small>';
+        if (event.data) {
+            try {
+                const datosStr = JSON.stringify(event.data);
+                datosHtml = '<code class="d-block" style="font-size: 10px; max-width: 300px; overflow: hidden; text-overflow: ellipsis;">' + datosStr + '</code>';
+            } catch(e) {
+                datosHtml = '<small class="text-muted">' + event.data + '</small>';
+            }
+        }
+        
+        // Crear fila
+        const row = $('<tr class="fade-in">');
+        row.html(
+            '<td><small>' + hora + '</small></td>' +
+            '<td><span class="badge bg-' + tipoClass + '">' + tipoIcon + ' ' + event.type + '</span></td>' +
+            '<td><code>' + (event.room || '-') + '</code></td>' +
+            '<td><strong>' + event.event + '</strong></td>' +
+            '<td>' + datosHtml + '</td>'
+        );
+        
+        // Agregar al inicio de la tabla
+        $('#eventsTableBody').prepend(row);
+        
+        // Limitar a 100 filas visibles
+        if ($('#eventsTableBody tr').length > 100) {
+            $('#eventsTableBody tr:last').remove();
+        }
+        
+        // Actualizar contador
+        const count = parseInt($('#eventCount').text()) + 1;
+        $('#eventCount').text(count + ' eventos');
+    }
+
+    // Función global para recargar
+    window.recargarSocketStats = recargarStats;
+</script>
+
+<style>
+    .fade-in {
+        animation: fadeIn 0.3s ease-in;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; background-color: #fff3cd; }
+        to { opacity: 1; background-color: transparent; }
+    }
+    
+    #eventsTableBody tr:first-child {
+        background-color: rgba(255, 193, 7, 0.2);
+    }
+    
+    .bg-purple {
+        background-color: #6f42c1 !important;
+    }
+</style>

@@ -1,0 +1,93 @@
+    <!-- Footer -->
+    <footer class="bg-dark text-white pt-5" id="contacto">
+        <div class="container">
+            <div class="row g-4 pb-4">
+                <div class="col-lg-4">
+                    <h5 class="fw-bold mb-3">
+                        <i class="bi bi-bicycle text-warning me-2"></i>Appxi
+                    </h5>
+                    <p class="text-muted mb-3">Tu solución de transporte rápido y seguro. Solicita un mototaxi con solo unos clics en Trinidad, Beni.</p>
+                    <div class="d-flex gap-3">
+                        <a href="#" class="text-white fs-5 social-icon"><i class="bi bi-facebook"></i></a>
+                        <a href="#" class="text-white fs-5 social-icon"><i class="bi bi-instagram"></i></a>
+                        <a href="#" class="text-white fs-5 social-icon"><i class="bi bi-twitter-x"></i></a>
+                        <a href="#" class="text-white fs-5 social-icon"><i class="bi bi-whatsapp"></i></a>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-4">
+                    <h6 class="fw-bold mb-3">Enlaces</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="/" class="text-muted text-decoration-none footer-link">Inicio</a></li>
+                        <li class="mb-2"><a href="#servicios" class="text-muted text-decoration-none footer-link">Servicios</a></li>
+                        <li class="mb-2"><a href="#como-funciona" class="text-muted text-decoration-none footer-link">Cómo Funciona</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-2 col-md-4">
+                    <h6 class="fw-bold mb-3">Apps</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="/pasajero" class="text-muted text-decoration-none footer-link">Pasajero</a></li>
+                        <li class="mb-2"><a href="/chofer" class="text-muted text-decoration-none footer-link">Piloto</a></li>
+                        <li class="mb-2"><a href="/admin" class="text-muted text-decoration-none footer-link">Admin</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-4 col-md-4">
+                    <h6 class="fw-bold mb-3">Contacto</h6>
+                    <ul class="list-unstyled text-muted">
+                        <li class="mb-2"><i class="bi bi-geo-alt text-warning me-2"></i>Trinidad, Beni, Bolivia</li>
+                        <li class="mb-2"><i class="bi bi-telephone text-warning me-2"></i>+591 69375664</li>
+                        <li class="mb-2"><i class="bi bi-envelope text-warning me-2"></i>appxi@hostbol.lat</li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="border-secondary">
+            <div class="row align-items-center py-3">
+                <div class="col-md-6">
+                    <p class="text-muted mb-0">&copy; 2026 MotoTaxi. Todos los derechos reservados.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <a href="#" class="text-muted text-decoration-none me-3 footer-link">Términos</a>
+                    <a href="#" class="text-muted text-decoration-none me-3 footer-link">Privacidad</a>
+                    <a href="#" class="text-muted text-decoration-none footer-link">Cookies</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <style>
+        .social-icon {
+            transition: transform 0.3s, color 0.3s;
+        }
+        
+        .social-icon:hover {
+            transform: translateY(-3px);
+            color: #ffc107 !important;
+        }
+        
+        .footer-link {
+            transition: color 0.3s;
+        }
+        
+        .footer-link:hover {
+            color: #ffc107 !important;
+        }
+    </style>
+
+    <!-- Bootstrap 5.0 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Smooth Scroll -->
+    <script>
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

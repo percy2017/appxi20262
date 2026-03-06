@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Appxi Admin</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #1e3a5f 0%, #0dcaf0 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .login-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+            max-width: 450px;
+            width: 100%;
+        }
+        .login-header {
+            background: #1e3a5f;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .login-body {
+            padding: 40px;
+        }
+        .form-control:focus {
+            border-color: #0dcaf0;
+            box-shadow: 0 0 0 0.25rem rgba(13, 202, 240, 0.25);
+        }
+        .btn-login {
+            background: #1e3a5f;
+            border: none;
+            padding: 12px;
+            font-weight: 600;
+        }
+        .btn-login:hover {
+            background: #2c5282;
+        }
+        .alert {
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="login-card">
+                    <div class="login-header">
+                        <i class="bi bi-speedometer2 fs-1 mb-3"></i>
+                        <h3 class="mb-1">Appxi</h3>
+                        <p class="mb-0 opacity-75">Panel de Administración</p>
+                    </div>
+                    <div class="login-body">
+                        <% if (typeof error !== 'undefined' && error) { %>
+                            <div class="alert alert-danger d-flex align-items-center" role="alert">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                <%= error %>
+                            </div>
+                        <% } %>
+                        
+                        <% if (typeof success !== 'undefined' && success) { %>
+                            <div class="alert alert-success d-flex align-items-center" role="alert">
+                                <i class="bi bi-check-circle-fill me-2"></i>
+                                <%= success %>
+                            </div>
+                        <% } %>
+                        
+                        <form action="/admin/login" method="POST" id="loginForm">
+                            <div class="mb-4">
+                                <label for="username" class="form-label fw-semibold">
+                                    <i class="bi bi-person me-2"></i>Usuario
+                                </label>
+                                <input type="text" 
+                                       class="form-control form-control-lg" 
+                                       id="username" 
+                                       name="username" 
+                                       placeholder="Ingresa tu usuario"
+                                       required
+                                       autocomplete="username">
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label for="password" class="form-label fw-semibold">
+                                    <i class="bi bi-key me-2"></i>Contraseña
+                                </label>
+                                <div class="input-group">
+                                    <input type="password" 
+                                           class="form-control form-control-lg" 
+                                           id="password" 
+                                           name="password" 
+                                           placeholder="Ingresa tu contraseña"
+                                           required
+                                           autocomplete="current-password">
+                                    <button class="btn btn-outline-secondary" 
+                                            type="button" 
+                                            id="togglePassword">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary btn-login btn-lg">
+                                    <i class="bi bi-box-arrow-in-right me-2"></i>Iniciar Sesión
+                                </button>
+                            </div>
+                        </form>
+                        
+                        <div class="text-center mt-4">
+                            <a href="/" class="text-decoration-none">
+                                <i class="bi bi-arrow-left me-1"></i>Volver al inicio
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Toggle password visibility
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const passwordInput = document.getElementById('password');
+            const icon = this.querySelector('i');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.remove('bi-eye');
+                icon.classList.add('bi-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.remove('bi-eye-slash');
+                icon.classList.add('bi-eye');
+            }
+        });
+        
+        // Validate form on submit
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            
+            if (!username || !password) {
+                e.preventDefault();
+                alert('Por favor, completa todos los campos');
+            }
+        });
+    </script>
+</body>
+</html>
