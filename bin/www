@@ -4,6 +4,10 @@
  * Module dependencies.
  */
 
+// Cargar variables de entorno desde .env
+import dotenv from 'dotenv';
+dotenv.config();
+
 import app from '../app.js';
 import debug from 'debug';
 import { createServer } from 'http';
