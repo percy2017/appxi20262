@@ -6,8 +6,23 @@
 import express from 'express';
 import * as pasajeroController from '../src/controllers/pasajeroController.js';
 import * as pasajeroApiController from '../src/controllers/pasajeroApiController.js';
+import * as pasajeroModel from '../src/models/pasajeroModel.js';
 
 const router = express.Router();
+
+// API pública para ver pasajeros (solo para testing)
+router.get('/api/debug/pasajeros', (req, res) => {
+    const pasajeros = pasajeroModel.getAllPasajeros();
+    res.json({ success: true, data: pasajeros });
+});
+
+// API pública para ver viajes (solo para testing)
+import * as viajeModel from '../src/models/viajeModel.js';
+
+router.get('/api/debug/viajes', (req, res) => {
+    const viajes = viajeModel.getAllViajes();
+    res.json({ success: true, data: viajes });
+});
 
 /**
  * POST /api/auth/login-whatsapp
@@ -69,5 +84,11 @@ router.post('/api/viajes/:id/completar', pasajeroApiController.completarViajeCho
  * Cancelar viaje
  */
 router.post('/api/viajes/:id/cancelar', pasajeroApiController.cancelarViaje);
+
+/**
+ * DELETE /api/viajes/:id
+ * Eliminar viaje (solo admin)
+ */
+router.delete('/api/viajes/:id', pasajeroApiController.eliminarViaje);
 
 export default router;

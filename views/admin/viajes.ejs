@@ -29,8 +29,6 @@
                         <th>ID</th>
                         <th>Pasajero</th>
                         <th>Piloto</th>
-                        <th>Origen</th>
-                        <th>Destino</th>
                         <th>Distancia</th>
                         <th>Precio</th>
                         <th>Estado</th>
@@ -71,6 +69,11 @@
 <script>
     // Datos locales para el modal de detalles
     let todosLosViajes = [];
+
+    // Cargar viajes al inicio
+    $(document).ready(function() {
+        cargarViajesData();
+    });
 
     // Función para cargar viajes (usada por dashboard.js)
     window.cargarViajesData = function() {
@@ -129,6 +132,16 @@
                 estadoBadge = 'danger';
                 estadoIcon = '❌';
                 estadoTexto = 'Cancelado';
+                break;
+            case 'expirado':
+                estadoBadge = 'secondary';
+                estadoIcon = '⏰';
+                estadoTexto = 'Expirado';
+                break;
+            case 'buscando':
+                estadoBadge = 'warning';
+                estadoIcon = '🔍';
+                estadoTexto = 'Buscando';
                 break;
         }
         

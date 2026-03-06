@@ -7,11 +7,43 @@
 const EVOLUTION_API_URL = process.env.EVOLUTION_API_URL || 'http://217.216.43.75:2001';
 const EVOLUTION_API_TOKEN = process.env.EVOLUTION_API_TOKEN || 'evolution2001';
 
+// Importar base de datos
+import db from '../config/database.js';
+import * as plantillaModel from '../models/plantillaNotificacionModel.js';
+
 // Almacén temporal de PINs (en memoria)
 const pinStore = new Map();
 
-// Variable para instancia por defecto (se guarda en memoria)
-let defaultInstance = null;
+/**
+ * Obtiene la instancia por defecto guardada en la base de datos
+ * @returns {string|null} Nombre de la instancia por defecto
+ */
+function getDefaultInstanceFromDB() {
+    try {
+        const row = db.prepare('SELECT valor FROM config WHERE clave = ?').get('whatsapp_default_instance');
+        return row ? row.valor : null;
+    } catch (error) {
+        console.error('Error al obtener instancia por defecto de DB:', error);
+        return null;
+    }
+}
+
+/**
+ * Guarda la instancia por defecto en la base de datos
+ * @param {string} instanceName Nombre de la instancia
+ */
+function setDefaultInstanceInDB(instanceName) {
+    try {
+        db.prepare(`
+            INSERT INTO config (clave, valor, updated_at)
+            VALUES (?, ?, CURRENT_TIMESTAMP)
+            ON CONFLICT(clave) DO UPDATE SET valor = ?, updated_at = CURRENT_TIMESTAMP
+        `).run('whatsapp_default_instance', instanceName, instanceName);
+        console.log('✅ Instancia por defecto guardada en DB:', instanceName);
+    } catch (error) {
+        console.error('Error al guardar instancia en DB:', error);
+    }
+}
 
 /**
  * Renderiza la página de Evolution API (instancias disponibles)
@@ -29,6 +61,7 @@ export async function evolutionPage(req, res) {
         
         let instances = [];
         let error = null;
+        let defaultInstance = getDefaultInstanceFromDB();
         
         if (response.ok) {
             let data = await response.json();
@@ -43,6 +76,15 @@ export async function evolutionPage(req, res) {
                 state: instance.connectionStatus,
                 integration: instance.integration
             }));
+            
+            // Si no hay instancia por defecto guardada, guardar la primera open o la primera disponible
+            if (!defaultInstance && instances.length > 0) {
+                const openInstance = instances.find(i => i.state === 'open');
+                const instanceToSave = openInstance ? openInstance.instanceName : instances[0].instanceName;
+                setDefaultInstanceInDB(instanceToSave);
+                defaultInstance = instanceToSave;
+                console.log('💾 Instancia por defecto establecida:', defaultInstance);
+            }
         } else {
             error = `Error de conexión: ${response.status}`;
         }
@@ -50,15 +92,18 @@ export async function evolutionPage(req, res) {
         res.renderWithLayout('admin/evolution', {
             title: 'Evolution API - Admin MotoTaxi',
             instances,
+            defaultInstance,
             error,
             apiUrl: EVOLUTION_API_URL,
             currentPage: 'evolution'
         });
     } catch (err) {
         console.error('Error en evolutionPage:', err);
+        const defaultInstance = getDefaultInstanceFromDB();
         res.renderWithLayout('admin/evolution', {
             title: 'Evolution API - Admin MotoTaxi',
             instances: [],
+            defaultInstance,
             error: 'No se pudo conectar con Evolution API: ' + err.message,
             apiUrl: EVOLUTION_API_URL,
             currentPage: 'evolution'
@@ -96,9 +141,13 @@ export async function getInstances(req, res) {
             integration: instance.integration
         }));
         
+        // Obtener la instancia por defecto de la base de datos
+        const defaultInstance = getDefaultInstanceFromDB();
+        
         res.json({
             success: true,
-            data: instances
+            data: instances,
+            defaultInstance: defaultInstance
         });
     } catch (error) {
         console.error('Error al obtener instancias:', error);
@@ -124,12 +173,13 @@ export function setDefaultInstance(req, res) {
             });
         }
         
-        defaultInstance = instance;
+        // Guardar en base de datos
+        setDefaultInstanceInDB(instance);
         
         res.json({
             success: true,
             message: 'Instancia guardada correctamente',
-            defaultInstance: defaultInstance
+            defaultInstance: instance
         });
     } catch (error) {
         console.error('Error al guardar instancia:', error);
@@ -145,6 +195,7 @@ export function setDefaultInstance(req, res) {
  * GET /api/evolution/default-instance
  */
 export function getDefaultInstance(req, res) {
+    const defaultInstance = getDefaultInstanceFromDB();
     res.json({
         success: true,
         defaultInstance: defaultInstance
@@ -153,17 +204,20 @@ export function getDefaultInstance(req, res) {
 
 /**
  * Obtiene la instancia a usar para enviar mensajes
- * Si hay una instancia por defecto, la usa; si no, busca una que esté "open"
+ * 1. Primero verifica la DB para ver si hay una instancia por defecto guardada
+ * 2. Si no hay, busca una que esté "open" en Evolution API y la guarda en DB
+ * 3. Si no hay ninguna open, usa la primera disponible
  * @returns {Promise<string>} Nombre de la instancia
  */
 async function getInstanceForSending() {
-    // Si hay una instancia por defecto configurada, usarla
-    if (defaultInstance) {
-        console.log('🔀 Usando instancia por defecto:', defaultInstance);
-        return defaultInstance;
+    // 1. Verificar si hay una instancia por defecto en la base de datos
+    const defaultFromDB = getDefaultInstanceFromDB();
+    if (defaultFromDB) {
+        console.log('🔀 Usando instancia por defecto (DB):', defaultFromDB);
+        return defaultFromDB;
     }
     
-    // Si no, buscar una instancia "open"
+    // 2. Si no hay, buscar una instancia "open" en Evolution API
     try {
         const response = await fetch(`${EVOLUTION_API_URL}/instance/fetchInstances`, {
             method: 'GET',
@@ -182,18 +236,22 @@ async function getInstanceForSending() {
         // Buscar una instancia "open"
         const openInstance = data.find(inst => inst.connectionStatus === 'open');
         
+        let instanciaAUsar;
         if (openInstance) {
-            console.log('🔀 Usando instancia automática (open):', openInstance.name);
-            return openInstance.name;
-        }
-        
-        // Si no hay ninguna open, usar la primera disponible
-        if (data.length > 0) {
+            console.log('🔀 Instancia open encontrada:', openInstance.name);
+            instanciaAUsar = openInstance.name;
+        } else if (data.length > 0) {
+            // Si no hay ninguna open, usar la primera disponible
             console.log('🔀 Usando primera instancia disponible:', data[0].name);
-            return data[0].name;
+            instanciaAUsar = data[0].name;
+        } else {
+            throw new Error('No hay instancias disponibles');
         }
         
-        throw new Error('No hay instancias disponibles');
+        // Guardar la instancia seleccionada en la base de datos como默认值
+        setDefaultInstanceInDB(instanciaAUsar);
+        
+        return instanciaAUsar;
     } catch (error) {
         console.error('Error al obtener instancia:', error);
         throw error;
@@ -223,16 +281,38 @@ export async function enviarPinWhatsApp(phoneNumber, instanceName = null) {
         // Generar PIN de 6 dígitos
         const pin = Math.floor(100000 + Math.random() * 900000).toString();
         
-        // Guardar PIN temporalmente (válido por 5 minutos)
+        // Guardar PIN temporalmente (válido por N minutos desde .env)
+        const PIN_EXPIRY_MINUTES = parseInt(process.env.PIN_EXPIRY_MINUTES || '5');
         pinStore.set(fullNumber, {
             pin: pin,
-            expires: Date.now() + 5 * 60 * 1000
+            expires: Date.now() + PIN_EXPIRY_MINUTES * 60 * 1000
         });
+        
+        // Obtener plantilla de la base de datos o usar mensaje por defecto
+        let mensaje = '';
+        const MONEDA = process.env.MONEDA || 'Bs';
+        
+        try {
+            const plantilla = plantillaModel.getPlantillaByClave('pin_verificacion');
+            if (plantilla && plantilla.activo) {
+                mensaje = plantillaModel.renderPlantilla(plantilla.mensaje, {
+                    pin: pin,
+                    minutos: PIN_EXPIRY_MINUTES.toString(),
+                    moneda: MONEDA
+                });
+            } else {
+                // Fallback al mensaje por defecto
+                mensaje = `🔐 Tu código de verificación para MotoTaxi es: *${pin}*\n\nEste código expira en ${PIN_EXPIRY_MINUTES} minutos.`;
+            }
+        } catch (e) {
+            // Fallback si falla la consulta
+            mensaje = `🔐 Tu código de verificación para MotoTaxi es: *${pin}*\n\nEste código expira en ${PIN_EXPIRY_MINUTES} minutos.`;
+        }
         
         // Enviar mensaje con el PIN
         const messageData = {
             number: fullNumber,
-            text: `🔐 Tu código de verificación para MotoTaxi es: *${pin}*\n\nEste código expira en 5 minutos.`
+            text: mensaje
         };
         
         console.log('📤 Enviando PIN con instancia:', instanciaAUsar);

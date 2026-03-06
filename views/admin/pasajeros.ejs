@@ -25,7 +25,7 @@
                         <th>Nombre</th>
                         <th>Teléfono</th>
                         <th>Email</th>
-                        <th>Dirección</th>
+                        <th>Verificado</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
@@ -46,7 +46,13 @@
                                 <td class="align-middle"><strong><%= pasajero.nombre %></strong></td>
                                 <td class="align-middle"><%= pasajero.telefono %></td>
                                 <td class="align-middle"><%= pasajero.email || '-' %></td>
-                                <td class="align-middle"><%= pasajero.direccion || '-' %></td>
+                                <td class="align-middle">
+                                    <% if (pasajero.avatar) { %>
+                                        <span class="badge bg-success"><i class="bi bi-check-circle"></i> Verificado</span>
+                                    <% } else { %>
+                                        <span class="badge bg-secondary"><i class="bi bi-question-circle"></i> No</span>
+                                    <% } %>
+                                </td>
                                 <td class="align-middle">
                                     <div class="btn-group btn-group-sm" role="group">
                                         <button class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#pasajeroModal" onclick="editarPasajero(<%= pasajero.id %>)" title="Editar">

@@ -11,8 +11,8 @@ import db from '../config/database.js';
  */
 export function getAllViajes() {
     return db.prepare(`
-        SELECT v.*, p.nombre as pasajero_nombre, p.telefono as pasajero_telefono,
-               pil.nombre as piloto_nombre, pil.apellido as piloto_apellido, pil.telefono as piloto_telefono
+        SELECT v.*, p.nombre as pasajero_nombre, p.telefono as pasajero_telefono, p.avatar as pasajero_avatar,
+               pil.nombre as piloto_nombre, pil.apellido as piloto_apellido, pil.telefono as piloto_telefono, pil.foto as piloto_foto
         FROM viajes v
         LEFT JOIN pasajeros p ON v.pasajero_id = p.id
         LEFT JOIN pilotos pil ON v.piloto_id = pil.id

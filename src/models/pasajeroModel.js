@@ -129,14 +129,51 @@ export function updatePasajero(id, pasajero) {
 
 /**
  * Elimina un pasajero
+ * Primero elimina los viajes y reseñas relacionados, y también la imagen de perfil
  * @param {number} id - ID del pasajero
  * @returns {boolean} True si se eliminó correctamente
  */
 export function deletePasajero(id) {
     const pasajeroId = parseInt(id);
-    const stmt = db.prepare('DELETE FROM pasajeros WHERE id = ?');
-    const result = stmt.run(pasajeroId);
-    return result.changes > 0;
+    
+    try {
+        // Obtener el pasajero para eliminar su imagen
+        const pasajero = getPasajeroById(pasajeroId);
+        
+        // Eliminar reseñas relacionadas con los viajes del pasajero
+        db.prepare(`
+            DELETE FROM resenas WHERE pasajero_id = ?
+        `).run(pasajeroId);
+        
+        // Eliminar viajes del pasajero
+        db.prepare(`
+            DELETE FROM viajes WHERE pasajero_id = ?
+        `).run(pasajeroId);
+        
+        // Ahora eliminar el pasajero
+        const stmt = db.prepare('DELETE FROM pasajeros WHERE id = ?');
+        const result = stmt.run(pasajeroId);
+        
+        // Eliminar imagen del filesystem si existe
+        if (pasajero && pasajero.avatar) {
+            try {
+                const fs = require('fs');
+                const path = require('path');
+                const imagePath = path.join(process.cwd(), 'public', pasajero.avatar);
+                if (fs.existsSync(imagePath)) {
+                    fs.unlinkSync(imagePath);
+                    console.log('🗑️ Imagen eliminada:', pasajero.avatar);
+                }
+            } catch (imgError) {
+                console.error('Error al eliminar imagen:', imgError);
+            }
+        }
+        
+        return result.changes > 0;
+    } catch (error) {
+        console.error('Error al eliminar pasajero:', error);
+        return false;
+    }
 }
 
 /**

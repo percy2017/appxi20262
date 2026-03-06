@@ -135,13 +135,32 @@ export function updatePilotoEstado(id, estado) {
 
 /**
  * Elimina un piloto
+ * Primero elimina los viajes y reseñas relacionados
  * @param {number} id - ID del piloto
  * @returns {boolean} True si se eliminó correctamente
  */
 export function deletePiloto(id) {
-    const stmt = db.prepare('DELETE FROM pilotos WHERE id = ?');
-    const result = stmt.run(id);
-    return result.changes > 0;
+    const pilotoId = parseInt(id);
+    
+    try {
+        // Eliminar reseñas relacionadas con los viajes del piloto
+        db.prepare(`
+            DELETE FROM resenas WHERE piloto_id = ?
+        `).run(pilotoId);
+        
+        // Eliminar viajes donde el piloto está asignado
+        db.prepare(`
+            DELETE FROM viajes WHERE piloto_id = ?
+        `).run(pilotoId);
+        
+        // Ahora eliminar el piloto
+        const stmt = db.prepare('DELETE FROM pilotos WHERE id = ?');
+        const result = stmt.run(pilotoId);
+        return result.changes > 0;
+    } catch (error) {
+        console.error('Error al eliminar piloto:', error);
+        return false;
+    }
 }
 
 /**

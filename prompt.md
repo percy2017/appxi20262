@@ -73,8 +73,9 @@ mototaxi-app/
 │       └── viajeModel.js
 ├── routes/
 │   ├── index.js              # Rutas landing page
-│   ├── admin.js             # Rutas del admin
-│   └── evolution.js          # Rutas de Evolution API y autenticación
+│   ├── admin.js             # Rutas del admin (protegidas)
+│   ├── api.js               # Rutas públicas de API (WebApps)
+│   └── evolution.js          # Rutas de Evolution API
 ├── views/
 │   ├── layouts/
 │   │   ├── header.ejs        # Header público
@@ -113,6 +114,7 @@ mototaxi-app/
 | `/admin/viajes` | Gestión de Viajes | Bootstrap 5.0 + DataTables + Socket.io |
 | `/admin/evolution` | Instancias Evolution API | Bootstrap 5.0 |
 | `/admin/socket-monitor` | Monitoreo de Sockets | Bootstrap 5.0 |
+| `/admin/plantillas-notificaciones` | Plantillas de Notificaciones | Bootstrap 5.0 |
 
 ---
 
@@ -178,13 +180,13 @@ mototaxi-app/
 
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
-| POST | `/admin/api/auth/login-whatsapp` | Login/registro con WhatsApp (obtiene datos reales y foto) |
-| POST | `/admin/api/viajes/solicitar` | Solicitar nuevo viaje (solo coordenadas + método pago) |
-| GET | `/admin/api/viajes/:id` | Obtener estado de viaje |
-| POST | `/admin/api/viajes/:id/oferta` | Chofer hace oferta (acepta o contraoferta) |
-| POST | `/admin/api/viajes/:id/confirmar` | Pasajero confirma viaje con chofer |
-| GET | `/admin/api/pasajero/:id/viajes` | Historial de viajes del pasajero |
-| POST | `/admin/api/resenas` | Crear reseña |
+| POST | `/api/auth/login-whatsapp` | Login/registro con WhatsApp (obtiene datos reales y foto) |
+| POST | `/api/viajes/solicitar` | Solicitar nuevo viaje (solo coordenadas + método pago) |
+| GET | `/api/viajes/:id` | Obtener estado de viaje |
+| POST | `/api/viajes/:id/oferta` | Chofer hace oferta (acepta o contraoferta) |
+| POST | `/api/viajes/:id/confirmar` | Pasajero confirma viaje con chofer |
+| GET | `/api/pasajero/:id/viajes` | Historial de viajes del pasajero |
+| POST | `/api/resenas` | Crear reseña |
 
 ---
 
@@ -474,11 +476,12 @@ npm start     # node ./bin/www
 9. `src/controllers/evolutionController.js` - Controlador de Evolution API
 10. `src/controllers/pasajeroController.js` - Controlador de pasajeros
 11. `src/controllers/pasajeroApiController.js` - APIs de viajes y reseñas
-12. `routes/evolution.js` - Rutas de Evolution y autenticación
-13. `routes/admin.js` - Rutas del admin (protegidas)
-14. `views/admin/login.ejs` - Página de login
-15. `views/admin/evolution.ejs` - Vista de instancias Evolution API
-16. `views/layouts/admin-layout.ejs` - Layout del admin
+12. `routes/admin.js` - Rutas del admin (protegidas)
+13. `routes/api.js` - Rutas públicas de API (WebApps)
+14. `routes/evolution.js` - Rutas de Evolution API
+15. `views/admin/login.ejs` - Página de login
+16. `views/admin/evolution.ejs` - Vista de instancias Evolution API
+17. `views/layouts/admin-layout.ejs` - Layout del admin
 
 ---
 
@@ -563,3 +566,96 @@ SESSION_SECRET=mototaxi_secret_key_2026
 | `iniciado` | Viaje en curso |
 | `completado` | Viaje terminado |
 | `cancelado` | Viaje cancelado |
+
+---
+
+## Sistema de Plantillas de Notificaciones
+
+### Descripción
+El sistema permite gestionar plantillas de mensajes de WhatsApp desde el panel de administración. Las plantillas soporte variables dinámicas.
+
+### Nueva Tabla en Base de Datos
+```sql
+plantillas_notificaciones (
+    id INTEGER PRIMARY KEY,
+    clave TEXT UNIQUE NOT NULL,
+    titulo TEXT NOT NULL,
+    mensaje TEXT NOT NULL,
+    activo INTEGER DEFAULT 1,
+    created_at DATETIME,
+    updated_at DATETIME
+)
+```
+
+### Plantillas por Defecto
+| Clave | Descripción |
+|-------|-------------|
+| `pin_verificacion` | Mensaje de PIN de verificación |
+| `nuevo_viaje` | Notificación de nuevo viaje a choferes |
+| `viaje_aceptado` | Notificación cuando un chofer acepta |
+| `viaje_iniciado` | Notificación de viaje iniciado |
+| `viaje_completado` | Notificación de viaje completado |
+| `sin_choferes` | Notificación cuando no hay choferes disponibles |
+
+### Variables Soportadas
+| Variable | Descripción |
+|----------|-------------|
+| `{pin}` | Código PIN de verificación |
+| `{minutos}` | Minutos de expiración del PIN |
+| `{moneda}` | Moneda del sistema (Bs) |
+| `{origen}` | Dirección de origen |
+| `{destino}` | Dirección de destino |
+| `{distancia}` | Distancia en km |
+| `{tiempo}` | Tiempo estimado en minutos |
+| `{precio}` | Precio del viaje |
+| `{piloto}` | Nombre del piloto |
+| `{placa}` | Placa del vehículo |
+
+### Rutas de Plantillas (Admin)
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/admin/plantillas-notificaciones` | Vista de gestión de plantillas |
+| GET | `/admin/api/plantillas` | Listar todas las plantillas |
+| GET | `/admin/api/plantillas/:id` | Obtener una plantilla |
+| POST | `/admin/api/plantillas` | Crear plantilla |
+| PUT | `/admin/api/plantillas/:id` | Actualizar plantilla |
+| DELETE | `/admin/api/plantillas/:id` | Eliminar plantilla |
+
+### Archivos del Sistema de Plantillas
+1. `src/models/plantillaNotificacionModel.js` - Modelo de datos
+2. `src/controllers/plantillaNotificacionController.js` - Controlador CRUD
+3. `views/admin/plantillas-notificaciones.ejs` - Vista UI
+4. `.env` - Variable `PIN_EXPIRY_MINUTES`
+
+---
+
+## APIs Probadas y Funcionales
+
+### WebApp Pasajero - Autenticación
+| Método | Endpoint | Estado |
+|--------|----------|--------|
+| POST | `/api/auth/solicitar-pin` | ✅ FUNCIONAL |
+| POST | `/api/auth/verificar-pin` | ✅ FUNCIONAL |
+
+### WebApp Pasajero - Viajes
+| Método | Endpoint | Estado |
+|--------|----------|--------|
+| POST | `/api/viajes/solicitar` | ✅ FUNCIONAL |
+
+### Flujo de Autenticación (Verificado)
+1. Pasajero solicita PIN → `POST /api/auth/solicitar-pin`
+2. Llega PIN a WhatsApp
+3. Pasajero verifica PIN → `POST /api/auth/verificar-pin`
+4. Backend obtiene nombre y foto real de WhatsApp
+5. Backend guarda pasajero en SQLite con datos reales
+6. Retorna datos del pasajero autenticado
+
+### Flujo de Solicitud de Viaje (Verificado)
+1. Pasajero envía coordenadas origen/destino + método pago
+2. Backend geocodifica coordenadas (Nominatim)
+3. Backend calcula ruta (OSRM)
+4. Backend calcula precio (fórmula: base + km*precio_km + tiempo*precio_minuto)
+5. Backend crea viaje en estado "buscando"
+6. Notifica a choferes por Socket.io y WhatsApp
+7. Si no hay choferes, notifica al pasajero

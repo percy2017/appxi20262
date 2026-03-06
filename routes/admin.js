@@ -9,6 +9,8 @@ import * as usuarioController from '../src/controllers/usuarioController.js';
 import * as pasajeroController from '../src/controllers/pasajeroController.js';
 import * as pasajeroApiController from '../src/controllers/pasajeroApiController.js';
 import * as authController from '../src/controllers/authController.js';
+import * as evolutionController from '../src/controllers/evolutionController.js';
+import * as plantillaNotificacionController from '../src/controllers/plantillaNotificacionController.js';
 
 const router = express.Router();
 
@@ -31,6 +33,48 @@ router.get('/', adminController.dashboard);
  * Renderiza la página de monitoreo de Socket.io
  */
 router.get('/socket-monitor', adminController.socketMonitorPage);
+
+/**
+ * GET /admin/evolution
+ * Renderiza la página de instancias de Evolution API
+ */
+router.get('/evolution', evolutionController.evolutionPage);
+
+/**
+ * GET /admin/plantillas-notificaciones
+ * Renderiza la página de gestión de plantillas de notificaciones
+ */
+router.get('/plantillas-notificaciones', plantillaNotificacionController.plantillasPage);
+
+/**
+ * GET /admin/api/plantillas
+ * API: Obtiene todas las plantillas
+ */
+router.get('/api/plantillas', plantillaNotificacionController.getPlantillas);
+
+/**
+ * GET /admin/api/plantillas/:id
+ * API: Obtiene una plantilla por ID
+ */
+router.get('/api/plantillas/:id', plantillaNotificacionController.getPlantilla);
+
+/**
+ * POST /admin/api/plantillas
+ * API: Crea una nueva plantilla
+ */
+router.post('/api/plantillas', plantillaNotificacionController.createPlantilla);
+
+/**
+ * PUT /admin/api/plantillas/:id
+ * API: Actualiza una plantilla
+ */
+router.put('/api/plantillas/:id', plantillaNotificacionController.updatePlantilla);
+
+/**
+ * DELETE /admin/api/plantillas/:id
+ * API: Elimina una plantilla
+ */
+router.delete('/api/plantillas/:id', plantillaNotificacionController.deletePlantilla);
 
 /**
  * GET /admin/api/socket-stats

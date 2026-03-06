@@ -132,6 +132,80 @@ export function initializeDatabase() {
             )
         `);
 
+        // Tabla de configuración del sistema
+        db.exec(`
+            CREATE TABLE IF NOT EXISTS config (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                clave TEXT UNIQUE NOT NULL,
+                valor TEXT,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+
+        // Tabla de plantillas de notificaciones
+        db.exec(`
+            CREATE TABLE IF NOT EXISTS plantillas_notificaciones (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                clave TEXT UNIQUE NOT NULL,
+                titulo TEXT NOT NULL,
+                mensaje TEXT NOT NULL,
+                activo INTEGER DEFAULT 1,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+
+        // Insertar plantillas por defecto si no existen
+        const plantillasCount = db.prepare('SELECT COUNT(*) as count FROM plantillas_notificaciones').get();
+        if (plantillasCount.count === 0) {
+            const insertPlantilla = db.prepare(`
+                INSERT INTO plantillas_notificaciones (clave, titulo, mensaje, activo)
+                VALUES (?, ?, ?, ?)
+            `);
+            
+            insertPlantilla.run(
+                'pin_verificacion',
+                '🔐 Verificación MotoTaxi',
+                'Tu código de verificación para MotoTaxi es: *{pin}*\n\nEste código expira en {minutos} minutos.',
+                1
+            );
+            
+            insertPlantilla.run(
+                'nuevo_viaje',
+                '🚗 Nueva Solicitud de Viaje',
+                '📍 *Origen:* {origen}\n🏁 *Destino:* {destino}\n📏 *Distancia:* {distancia} km\n⏱️ *Tiempo:* {tiempo} min\n💰 *Precio:* {precio} {moneda}',
+                1
+            );
+            
+            insertPlantilla.run(
+                'viaje_aceptado',
+                '✅ Viaje Aceptado',
+                '✅ *{piloto}* aceptó tu solicitud!\n\n🏍️ *Mototaxi:* {placa}\n💰 *Precio acordado:* {precio} {moneda}\n\nConfirma el viaje en la app para continuar.',
+                1
+            );
+            
+            insertPlantilla.run(
+                'viaje_iniciado',
+                '🚗 Viaje Iniciado',
+                'El chofer está en camino a recogerte.\n\n¡Prepárate!',
+                1
+            );
+            
+            insertPlantilla.run(
+                'viaje_completado',
+                '✅ Viaje Completado',
+                '¡Gracias por usar MotoTaxi!\n\n💰 *Monto:* {precio} {moneda}\n\nTu calificación ayuda a mejorar el servicio.',
+                1
+            );
+            
+            insertPlantilla.run(
+                'sin_choferes',
+                '🚗 Solicitud de Viaje',
+                'Lo sentimos, no hay choferes disponibles en este momento.\n\nTe notificaremos cuando algún chofer acepte tu solicitud.\n\n📍 *Origen:* {origen}\n🏁 *Destino:* {destino}',
+                1
+            );
+        }
+
         // Insertar usuario admin por defecto si no existe
         const adminExists = db.prepare('SELECT COUNT(*) as count FROM usuarios WHERE username = ?').get('admin');
         if (adminExists.count === 0) {
@@ -141,18 +215,8 @@ export function initializeDatabase() {
             `).run('admin', 'admin123', 'Administrador', 'admin@mototaxi.com', 'administrador');
         }
 
-        // Insertar algunos pilotos de ejemplo si no existen
-        const pilotosCount = db.prepare('SELECT COUNT(*) as count FROM pilotos').get();
-        if (pilotosCount.count === 0) {
-            const insertPiloto = db.prepare(`
-                INSERT INTO pilotos (nombre, telefono, licencia, placa, modelo, color, estado)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            `);
-            
-            insertPiloto.run('Juan Pérez', '76543210', 'LIC001', 'ABC-123', 'Yamaha NMAX', 'Rojo', 'disponible');
-            insertPiloto.run('María García', '76543211', 'LIC002', 'DEF-456', 'Honda PCX', 'Azul', 'disponible');
-            insertPiloto.run('Carlos López', '76543212', 'LIC003', 'GHI-789', 'Suzuki Burgman', 'Verde', 'ocupado');
-        }
+       
+     
 
         console.log('✅ Base de datos inicializada correctamente');
     } catch (error) {

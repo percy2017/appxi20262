@@ -20,6 +20,58 @@ const EVOLUTION_API_URL = process.env.EVOLUTION_API_URL || 'http://217.216.43.75
 const EVOLUTION_API_TOKEN = process.env.EVOLUTION_API_TOKEN || 'evolution2001';
 
 /**
+ * Expira viajes que han estado en estado "buscando" por más tiempo del permitido
+ * Se ejecuta cuando un nuevo viaje es solicitado o periódicamente
+ */
+export async function expirarViajesBuscando(io) {
+    try {
+        const tiempoMaxMs = TIEMPO_ESPERA_MAX * 1000; // Convertir a milisegundos
+        const ahora = Date.now();
+        
+        // Obtener viajes en estado "buscando" que han expirado
+        const viajesExpirados = db.prepare(`
+            SELECT v.*, p.nombre as pasajero_nombre, p.telefono as pasajero_telefono
+            FROM viajes v
+            LEFT JOIN pasajeros p ON v.pasajero_id = p.id
+            WHERE v.estado = 'buscando' 
+            AND (strftime('%s', 'now') - strftime('%s', v.fecha_solicitud)) * 1000 > ?
+        `).all(tiempoMaxMs);
+        
+        if (viajesExpirados.length > 0) {
+            console.log(`⏰ Expirando ${viajesExpirados.length} viajes...`);
+        }
+        
+        for (const viaje of viajesExpirados) {
+            // Actualizar estado a "expirado"
+            db.prepare(`
+                UPDATE viajes SET estado = 'expirado' WHERE id = ?
+            `).run(viaje.id);
+            
+            console.log(`❌ Viaje ${viaje.id} expirado (sin chofer)`);
+            
+            // Notificar al pasajero por Socket
+            if (io) {
+                io.to(`pasajero_${viaje.pasajero_id}`).emit('viaje_expirado', {
+                    viaje_id: viaje.id,
+                    mensaje: 'Tu solicitud de viaje ha expirado. No hay choferes disponibles.'
+                });
+            }
+            
+            // Notificar por WhatsApp
+            const MONEDA_SIMBOLO = process.env.MONEDA || 'Bs';
+            const mensajeExpirado = `🚗 *Viaje Expirado*\n\nLo sentimos, tu solicitud de viaje no fue atendida.\n\n📍 *Origen:* ${viaje.origen_direccion}\n🏁 *Destino:* ${viaje.destino_direccion}\n💰 *Precio:* ${viaje.precio} ${MONEDA_SIMBOLO}\n\nPuedes intentar nuevamente cuando desees.`;
+            
+            await enviarNotificacionWhatsApp(viaje.pasajero_telefono, mensajeExpirado);
+        }
+        
+        return viajesExpirados.length;
+    } catch (error) {
+        console.error('Error al expirar viajes:', error);
+        return 0;
+    }
+}
+
+/**
  * Envía notificación por WhatsApp usando Evolution API
  * @param {string} numero - Número de teléfono
  * @param {string} mensaje - Mensaje a enviar
@@ -274,6 +326,12 @@ export async function solicitarViaje(req, res) {
         
         // Emitir evento de socket para notificar a los pilotos
         const io = req.app.get('io');
+        
+        // Antes de buscar choferes, expirar viajes anteriores sin respuesta
+        if (io) {
+            await expirarViajesBuscando(io);
+        }
+        
         let hayChoferes = false;
         
         if (io) {
@@ -883,6 +941,44 @@ export async function cancelarViaje(req, res) {
         res.status(500).json({
             success: false,
             message: 'Error al cancelar viaje: ' + error.message
+        });
+    }
+}
+
+/**
+ * API: Elimina un viaje (solo admin o para limpieza)
+ * DELETE /api/viajes/:id
+ */
+export function eliminarViaje(req, res) {
+    try {
+        const { id } = req.params;
+        const viajeId = parseInt(id);
+        
+        // Verificar si el viaje existe
+        const viaje = viajeModel.getViajeById(viajeId);
+        if (!viaje) {
+            return res.status(404).json({
+                success: false,
+                message: 'Viaje no encontrado'
+            });
+        }
+        
+        // Eliminar reseñas relacionadas
+        db.prepare('DELETE FROM resenas WHERE viaje_id = ?').run(viajeId);
+        
+        // Eliminar el viaje
+        const stmt = db.prepare('DELETE FROM viajes WHERE id = ?');
+        const result = stmt.run(viajeId);
+        
+        res.json({
+            success: true,
+            message: 'Viaje eliminado correctamente'
+        });
+    } catch (error) {
+        console.error('Error al eliminar viaje:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al eliminar viaje: ' + error.message
         });
     }
 }

@@ -85,7 +85,7 @@ mototaxi-app/
 │   │   │   └── dashboard.js
 │   │   └── socket-client.js  # Cliente Socket.io
 │   ├── images/
-│   └── img/
+│   │   └── pasajeros/        # Fotos de pasajeros
 ├── src/
 │   ├── config/
 │   │   ├── database.js       # Conexión a SQLite
@@ -94,8 +94,10 @@ mototaxi-app/
 │   │   └── init.js           # Script para crear tablas
 │   ├── controllers/
 │   │   ├── adminController.js
+│   │   ├── authController.js
 │   │   ├── usuarioController.js
-│   │   └── pasajeroController.js
+│   │   ├── pasajeroController.js
+│   │   └── pasajeroApiController.js
 │   └── models/
 │       ├── usuarioModel.js
 │       ├── pilotoModel.js
@@ -103,7 +105,9 @@ mototaxi-app/
 │       └── viajeModel.js
 ├── routes/
 │   ├── index.js              # Rutas landing page
-│   └── admin.js              # /admin (incluye API REST)
+│   ├── admin.js              # Rutas admin (protegidas)
+│   ├── api.js               # Rutas públicas de API
+│   └── evolution.js          # Rutas Evolution API
 ├── views/
 │   ├── layouts/
 │   │   ├── header.ejs        # Header público

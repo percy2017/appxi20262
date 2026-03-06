@@ -58,8 +58,6 @@ const tableConfigs = {
             { data: 'id', title: 'ID', render: (data) => `<strong>#${data}</strong>` },
             { data: 'pasajero_nombre', title: 'Pasajero', render: renderPasajero },
             { data: 'piloto_nombre', title: 'Piloto', render: renderPiloto },
-            { data: 'origen_direccion', title: 'Origen', render: renderDireccionCorta },
-            { data: 'destino_direccion', title: 'Destino', render: renderDireccionCorta },
             { data: 'distancia', title: 'Distancia', render: renderDistancia },
             { data: 'precio', title: 'Precio', render: renderPrecio },
             { data: 'estado', title: 'Estado', render: renderEstadoViaje },
@@ -244,8 +242,11 @@ function renderAccionesPasajero(data) {
 function renderPasajero(data, type, row) {
     if (data) {
         const inicial = data.charAt(0).toUpperCase();
+        const avatarHtml = row.pasajero_avatar 
+            ? `<img src="${row.pasajero_avatar}" class="rounded-circle me-2" style="width:32px;height:32px;object-fit:cover;">`
+            : `<div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold me-2" style="width:32px;height:32px; background: #0dcaf0;">${inicial}</div>`;
         return `<div class="d-flex align-items-center">
-            <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold me-2" style="width:32px;height:32px; background: #0dcaf0;">${inicial}</div>
+            ${avatarHtml}
             <div>
                 <div class="fw-semibold">${data}</div>
                 <small class="text-muted">${row.pasajero_telefono || '-'}</small>
@@ -300,10 +301,13 @@ function renderPrecio(data) {
 function renderEstadoViaje(data) {
     const estados = {
         pendiente: { badge: 'warning', icon: '⏳', texto: 'Pendiente' },
+        buscando: { badge: 'warning', icon: '🔍', texto: 'Buscando' },
         aceptado: { badge: 'info', icon: '✅', texto: 'Aceptado' },
         encurso: { badge: 'primary', icon: '🚗', texto: 'En Curso' },
+        iniciado: { badge: 'primary', icon: '🚗', texto: 'Iniciado' },
         completado: { badge: 'success', icon: '🎉', texto: 'Completado' },
-        cancelado: { badge: 'danger', icon: '❌', texto: 'Cancelado' }
+        cancelado: { badge: 'danger', icon: '❌', texto: 'Cancelado' },
+        expirado: { badge: 'secondary', icon: '⏰', texto: 'Expirado' }
     };
     const estado = estados[data] || { badge: 'secondary', icon: '⚪', texto: data };
     return `<span class="badge bg-${estado.badge}">${estado.icon} ${estado.texto}</span>`;

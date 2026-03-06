@@ -84,11 +84,91 @@ export async function verificarPinLogin(req, res) {
             });
         }
         
-        // Crear o actualizar pasajero
+        // Obtener datos del perfil de WhatsApp
+        let whatsappName = 'Usuario WhatsApp';
+        let whatsappPicture = null;
+        
+        try {
+            const EVOLUTION_API_URL = process.env.EVOLUTION_API_URL || 'http://217.216.43.75:2001';
+            const EVOLUTION_API_TOKEN = process.env.EVOLUTION_API_TOKEN || 'evolution2001';
+            
+            // Limpiar número
+            let cleanNumber = phone.replace(/[\s\-\(\)]/g, '');
+            let fullNumber = cleanNumber;
+            if (!cleanNumber.startsWith('+') && !cleanNumber.startsWith('591')) {
+                if (cleanNumber.startsWith('7') || cleanNumber.startsWith('6')) {
+                    fullNumber = '591' + cleanNumber;
+                }
+            }
+            
+            // Obtener instancia activa
+            const instancesRes = await fetch(`${EVOLUTION_API_URL}/instance/fetchInstances`, {
+                method: 'GET',
+                headers: {
+                    'apikey': EVOLUTION_API_TOKEN,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            const instances = await instancesRes.json();
+            const openInstance = instances.find(inst => inst.connectionStatus === 'open');
+            
+            if (openInstance) {
+                // Obtener perfil del usuario
+                const profileRes = await fetch(`${EVOLUTION_API_URL}/chat/fetchProfile/${openInstance.name}`, {
+                    method: 'POST',
+                    headers: {
+                        'apikey': EVOLUTION_API_TOKEN,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ number: fullNumber })
+                });
+                
+                if (profileRes.ok) {
+                    const profileData = await profileRes.json();
+                    whatsappName = profileData.name || 'Usuario WhatsApp';
+                    whatsappPicture = profileData.picture || null;
+                    
+                    // Si hay foto de perfil, descargarla y guardarla localmente
+                    if (whatsappPicture) {
+                        try {
+                            const fs = await import('fs');
+                            const path = await import('path');
+                            
+                            // Generar nombre de archivo único
+                            const fileName = `pasajero_${fullNumber}_${Date.now()}.jpg`;
+                            const uploadDir = path.join(process.cwd(), 'public', 'images', 'pasajeros');
+                            
+                            // Crear directorio si no existe
+                            if (!fs.existsSync(uploadDir)) {
+                                fs.mkdirSync(uploadDir, { recursive: true });
+                            }
+                            
+                            // Descargar imagen
+                            const imageRes = await fetch(whatsappPicture);
+                            const imageBuffer = await imageRes.arrayBuffer();
+                            const imagePath = path.join(uploadDir, fileName);
+                            
+                            fs.writeFileSync(imagePath, Buffer.from(imageBuffer));
+                            whatsappPicture = `/images/pasajeros/${fileName}`;
+                            
+                            console.log('📷 Foto de perfil guardada:', whatsappPicture);
+                        } catch (imgError) {
+                            console.error('Error al guardar imagen:', imgError);
+                            whatsappPicture = null;
+                        }
+                    }
+                }
+            }
+        } catch (profileError) {
+            console.error('Error al obtener perfil de WhatsApp:', profileError);
+        }
+        
+        // Crear o actualizar pasajero con datos reales
         const pasajero = pasajeroModel.upsertPasajero({
             telefono: phone,
-            nombre: 'Usuario WhatsApp',
-            avatar: null
+            nombre: whatsappName,
+            avatar: whatsappPicture
         });
         
         res.json({
