@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url';
 import cookieParser from 'cookie-parser';
 import session from 'express-session';
 import logger from 'morgan';
+import cors from 'cors';
 
 import indexRouter from './routes/index.js';
 import adminRouter from './routes/admin.js';
@@ -22,6 +23,12 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+
+// Configuración de CORS para permitir conexiones desde cualquier origen
+app.use(cors({
+    origin: true,
+    credentials: true
+}));
 
 // Hacer variables de entorno disponibles en las vistas
 app.locals.MONEDA = process.env.MONEDA || 'Bs';
