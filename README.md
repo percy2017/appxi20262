@@ -130,8 +130,8 @@ mototaxi-app/
 
 ```bash
 # Clonar el repositorio
-git clone <url-del-repositorio>
-cd mototaxi-app
+git clone https://github.com/percy2017/appxi20262.git
+cd appxi20262
 
 # Instalar dependencias
 npm install
@@ -141,15 +141,34 @@ npm install
 
 ## ▶️ Ejecución
 
+### Desarrollo
 ```bash
 # Modo desarrollo (con nodemon)
 npm run dev
 
-# Modo producción
+# O directamente
 npm start
 ```
 
-El servidor se ejecutará en: **http://localhost:3000**
+### Producción (PM2)
+```bash
+# Iniciar con PM2
+pm2 start bin/www --name appxi2026
+
+# Ver logs
+pm2 logs appxi2026
+
+# Reiniciar
+pm2 restart appxi2026
+
+# Detener
+pm2 stop appxi2026
+
+# Estado
+pm2 status
+```
+
+El servidor se ejecutará en el puerto configurado en `.env` (por defecto 3000).
 
 ---
 
